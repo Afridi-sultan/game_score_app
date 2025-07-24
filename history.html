@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game History & Analytics</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-bg: #1f2937;
+            --light-bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,32L48,37.3C96,43,192,53,288,90.7C384,128,480,192,576,213.3C672,235,768,213,864,176C960,139,1056,85,1152,80C1248,75,1344,117,1392,138.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+            background-size: cover;
+            pointer-events: none;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--shadow-md);
+            text-align: center;
+            transition: var(--transition);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .stat-card.total-games i {
+            color: var(--primary-color);
+        }
+
+        .stat-card.total-players i {
+            color: var(--secondary-color);
+        }
+
+        .stat-card.highest-score i {
+            color: var(--warning-color);
+        }
+
+        .stat-card.avg-score i {
+            color: #8b5cf6;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .content-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.7s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--primary-color);
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: white;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        tr {
+            transition: var(--transition);
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .winner-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
+        }
+
+        .chart-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .chart-tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .chart-tab.active {
+            color: var(--primary-color);
+        }
+
+        .chart-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary-color);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            animation: modalSlide 0.3s ease-out;
+        }
+
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .content-section {
+                padding: 20px;
+            }
+
+            .filters {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .table-container {
+                margin: 0 -20px;
+                width: calc(100% + 40px);
+                border-radius: 0;
+            }
+
+            th, td {
+                padding: 10px;
+                font-size: 0.85rem;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .export-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .export-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            min-width: 200px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .export-dropdown.show {
+            display: block;
+        }
+
+        .export-option {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        .export-option:hover {
+            background: var(--light-bg);
+        }
+
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .trend-up {
+            color: var(--secondary-color);
+        }
+
+        .trend-down {
+            color: var(--danger-color);
+        }
+
+        .player-performance-card {
+            background: var(--light-bg);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .player-performance-card:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .player-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .player-stats {
+            text-align: right;
+        }
+
+        .player-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .player-meta {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .win-rate {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="main-container">
+        <div class="header">
+            <h1>Game Analytics Dashboard</h1>
+            <p>Comprehensive Performance Tracking & Statistics</p>
+            
+            <div class="action-buttons">
+                <button onclick="goBack()" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Game
+                </button>
+                
+                <div class="export-menu">
+                    <button onclick="toggleExportMenu()" class="btn btn-secondary">
+                        <i class="fas fa-download"></i> Export Report
+                    </button>
+                    <div class="export-dropdown" id="exportDropdown">
+                        <button class="export-option" onclick="exportToPDF()">
+                            <i class="fas fa-file-pdf"></i> Export as PDF
+                        </button>
+                        <button class="export-option" onclick="exportToExcel()">
+                            <i class="fas fa-file-excel"></i> Export as Excel
+                        </button>
+                        <button class="export-option" onclick="exportToCSV()">
+                            <i class="fas fa-file-csv"></i> Export as CSV
+                        </button>
+                    </div>
+                </div>
+                
+                <button onclick="showResetModal()" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Reset History
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card total-games">
+                <i class="fas fa-gamepad"></i>
+                <div class="stat-value" id="totalGames">0</div>
+                <div class="stat-label">Total Games Played</div>
+            </div>
+            
+            <div class="stat-card total-players">
+                <i class="fas fa-users"></i>
+                <div class="stat-value" id="totalPlayers">0</div>
+                <div class="stat-label">Unique Players</div>
+            </div>
+            
+            <div class="stat-card highest-score">
+                <i class="fas fa-trophy"></i>
+                <div class="stat-value" id="highestScore">0</div>
+                <div class="stat-label">Highest Score Ever</div>
+            </div>
+            
+            <div class="stat-card avg-score">
+                <i class="fas fa-chart-line"></i>
+                <div class="stat-value" id="avgScore">0</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-trophy"></i> Player Performance Rankings
+            </h2>
+            
+            <div id="playerRankings"></div>
+        </div>
+
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-bar"></i> Performance Analytics
+            </h2>
+            
+            <div class="chart-tabs">
+                <button class="chart-tab active" onclick="showChart('winRate', this)">Win Rate</button>
+                <button class="chart-tab" onclick="showChart('totalWins', this)">Total Wins</button>
+                <button class="chart-tab" onclick="showChart('avgScore', this)">Average Scores</button>
+                <button class="chart-tab" onclick="showChart('trend', this)">Performance Trend</button>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="analyticsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-history"></i> Game History
+            </h2>
+            
+            <div class="filters">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search by player name..." onkeyup="filterHistory()">
+                </div>
+                
+                <select class="filter-select" id="dateFilter" onchange="filterHistory()">
+                    <option value="">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                </select>
+                
+                <select class="filter-select" id="sortFilter" onchange="sortHistory()">
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                    <option value="score-desc">Highest Score</option>
+                    <option value="score-asc">Lowest Score</option>
+                </select>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Players & Scores</th>
+                            <th>Winner</th>
+                            <th>Winning Score</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+            </div>
+            
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="fas fa-inbox"></i>
+                <h3>No Games Found</h3>
+                <p>Start playing to see your game history here!</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="resetModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Reset Game History</h2>
+                <button class="modal-close" onclick="closeResetModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reset all game history? This action cannot be undone and will permanently delete all saved games and statistics.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeResetModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmReset()">
+                    <i class="fas fa-trash"></i> Reset All Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="gameDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Game Details</h2>
+                <button class="modal-close" onclick="closeGameDetailsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="gameDetailsBody">
+                <!-- Game details will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeGameDetailsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameHistory = [];
+        let currentChart = null;
+        let currentChartType = 'winRate';
+        let filteredHistory = [];
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }, 300);
+        }
+
+        function loadHistory() {
+            showLoading();
+            gameHistory = JSON.parse(localStorage.getItem("gameHistory")) || [];
+            filteredHistory = [...gameHistory];
+            
+            updateStatistics();
+            updatePlayerRankings();
+            displayHistory();
+            showChart('winRate');
+            
+            hideLoading();
+        }
+
+        function updateStatistics() {
+            const totalGames = gameHistory.length;
+            const uniquePlayers = new Set();
+            let highestScore = 0;
+            let totalScore = 0;
+            let scoreCount = 0;
+
+            gameHistory.forEach(game => {
+                game.playerNames.forEach(name => uniquePlayers.add(name));
+                game.scores.forEach(score => {
+                    const scoreNum = parseInt(score);
+                    if (scoreNum > highestScore) highestScore = scoreNum;
+                    totalScore += scoreNum;
+                    scoreCount++;
+                });
+            });
+
+            document.getElementById('totalGames').textContent = totalGames;
+            document.getElementById('totalPlayers').textContent = uniquePlayers.size;
+            document.getElementById('highestScore').textContent = highestScore;
+            document.getElementById('avgScore').textContent = scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0;
+        }
+
+        function updatePlayerRankings() {
+            const playerStats = {};
+
+            gameHistory.forEach(game => {
+                game.playerNames.forEach((player, index) => {
+                    if (!playerStats[player]) {
+                        playerStats[player] = {
+                            wins: 0,
+                            games: 0,
+                            totalScore: 0,
+                            highestScore: 0
+                        };
+                    }
+                    
+                    playerStats[player].games++;
+                    playerStats[player].totalScore += parseInt(game.scores[index]);
+                    
+                    if (parseInt(game.scores[index]) > playerStats[player].highestScore) {
+                        playerStats[player].highestScore = parseInt(game.scores[index]);
+                    }
+                    
+                    if (game.highestScorer === player) {
+                        playerStats[player].wins++;
+                    }
+                });
+            });
+
+            const rankingsContainer = document.getElementById('playerRankings');
+            rankingsContainer.innerHTML = '';
+
+            const sortedPlayers = Object.entries(playerStats)
+                .sort((a, b) => {
+                    const winRateA = (a[1].wins / a[1].games) * 100;
+                    const winRateB = (b[1].wins / b[1].games) * 100;
+                    return winRateB - winRateA;
+                });
+
+            sortedPlayers.forEach(([player, stats], index) => {
+                const winRate = ((stats.wins / stats.games) * 100).toFixed(1);
+                const avgScore = Math.round(stats.totalScore / stats.games);
+                
+                const card = document.createElement('div');
+                card.className = 'player-performance-card';
+                
+                card.innerHTML = `
+                    <div class="player-info">
+                        <div class="player-avatar">${player.charAt(0).toUpperCase()}</div>
+                        <div>
+                            <div class="player-name">${player}</div>
+                            <div class="player-meta">
+                                ${stats.games} games • ${stats.wins} wins • Avg: ${avgScore}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="player-stats">
+                        <div class="win-rate">${winRate}%</div>
+                        <div class="player-meta">Win Rate</div>
+                    </div>
+                `;
+                
+                rankingsContainer.appendChild(card);
+            });
+        }
+
+        function displayHistory() {
+            const historyBody = document.getElementById('historyBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            historyBody.innerHTML = '';
+
+            if (filteredHistory.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+
+            filteredHistory.forEach((game, index) => {
+                const row = document.createElement('tr');
+                const playerDetails = game.playerNames.map((name, idx) => 
+                    `<div>${name}: <strong>${game.scores[idx]}</strong></div>`
+                ).join('');
+                
+                row.innerHTML = `
+                    <td>${game.date}</td>
+                    <td>${playerDetails}</td>
+                    <td>
+                        <span class="winner-badge">
+                            <i class="fas fa-crown"></i> ${game.highestScorer}
+                        </span>
+                    </td>
+                    <td><strong>${game.maxScore}</strong></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewGameDetails(${gameHistory.indexOf(game)})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                
+                historyBody.appendChild(row);
+            });
+        }
+
+        function showChart(type, tabElement) {
+            currentChartType = type;
+            
+            // Update active tab
+            document.querySelectorAll('.chart-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // If called from a click event, use the clicked element, otherwise find by type
+            if (tabElement) {
+                tabElement.classList.add('active');
+            } else {
+                // Find the tab button that matches the chart type
+                const tabs = document.querySelectorAll('.chart-tab');
+                tabs.forEach(tab => {
+                    if ((type === 'winRate' && tab.textContent.includes('Win Rate')) ||
+                        (type === 'totalWins' && tab.textContent.includes('Total Wins')) ||
+                        (type === 'avgScore' && tab.textContent.includes('Average Scores')) ||
+                        (type === 'trend' && tab.textContent.includes('Performance Trend'))) {
+                        tab.classList.add('active');
+                    }
+                });
+            }
+
+            const playerStats = {};
+            
+            gameHistory.forEach(game => {
+                game.playerNames.forEach((player, index) => {
+                    if (!playerStats[player]) {
+                        playerStats[player] = {
+                            wins: 0,
+                            games: 0,
+                            totalScore: 0,
+                            scores: []
+                        };
+                    }
+                    
+                    playerStats[player].games++;
+                    playerStats[player].totalScore += parseInt(game.scores[index]);
+                    playerStats[player].scores.push(parseInt(game.scores[index]));
+                    
+                    if (game.highestScorer === player) {
+                        playerStats[player].wins++;
+                    }
+                });
+            });
+
+            const labels = Object.keys(playerStats);
+            let data, chartType, chartLabel;
+
+            switch(type) {
+                case 'winRate':
+                    data = labels.map(player => 
+                        ((playerStats[player].wins / playerStats[player].games) * 100).toFixed(1)
+                    );
+                    chartType = 'bar';
+                    chartLabel = 'Win Rate (%)';
+                    break;
+                case 'totalWins':
+                    data = labels.map(player => playerStats[player].wins);
+                    chartType = 'bar';
+                    chartLabel = 'Total Wins';
+                    break;
+                case 'avgScore':
+                    data = labels.map(player => 
+                        Math.round(playerStats[player].totalScore / playerStats[player].games)
+                    );
+                    chartType = 'radar';
+                    chartLabel = 'Average Score';
+                    break;
+                case 'trend':
+                    // Create trend data for last 10 games
+                    const trendData = createTrendData();
+                    displayTrendChart(trendData);
+                    return;
+            }
+
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            const ctx = document.getElementById('analyticsChart').getContext('2d');
+            currentChart = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: chartLabel,
+                        data: data,
+                        backgroundColor: [
+                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(37, 99, 235, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(239, 68, 68, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: chartType === 'radar'
+                        }
+                    },
+                    scales: chartType === 'bar' ? {
+                        y: {
+                            beginAtZero: true
+                        }
+                    } : {}
+                }
+            });
+        }
+
+        function createTrendData() {
+            const recentGames = gameHistory.slice(-10);
+            const playerTrends = {};
+            
+            const allPlayers = new Set();
+            recentGames.forEach(game => {
+                game.playerNames.forEach(player => allPlayers.add(player));
+            });
+            
+            allPlayers.forEach(player => {
+                playerTrends[player] = [];
+            });
+            
+            recentGames.forEach((game, gameIndex) => {
+                allPlayers.forEach(player => {
+                    const playerIndex = game.playerNames.indexOf(player);
+                    if (playerIndex !== -1) {
+                        playerTrends[player].push(parseInt(game.scores[playerIndex]));
+                    } else {
+                        playerTrends[player].push(null);
+                    }
+                });
+            });
+            
+            return {
+                labels: recentGames.map((_, i) => `Game ${i + 1}`),
+                playerTrends: playerTrends
+            };
+        }
+
+        function displayTrendChart(trendData) {
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            const datasets = Object.entries(trendData.playerTrends).map(([player, scores], index) => ({
+                label: player,
+                data: scores,
+                borderColor: [
+                    'rgba(37, 99, 235, 1)',
+                    'rgba(16, 185, 129, 1)',
+                    'rgba(245, 158, 11, 1)',
+                    'rgba(239, 68, 68, 1)'
+                ][index % 4],
+                backgroundColor: 'transparent',
+                tension: 0.3,
+                spanGaps: true
+            }));
+
+            const ctx = document.getElementById('analyticsChart').getContext('2d');
+            currentChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: trendData.labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function filterHistory() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            filteredHistory = gameHistory.filter(game => {
+                // Search filter
+                const matchesSearch = searchTerm === '' || 
+                    game.playerNames.some(name => name.toLowerCase().includes(searchTerm));
+                
+                // Date filter
+                let matchesDate = true;
+                if (dateFilter) {
+                    const gameDate = new Date(game.date);
+                    const now = new Date();
+                    
+                    switch(dateFilter) {
+                        case 'today':
+                            matchesDate = gameDate.toDateString() === now.toDateString();
+                            break;
+                        case 'week':
+                            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            matchesDate = gameDate >= weekAgo;
+                            break;
+                        case 'month':
+                            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                            matchesDate = gameDate >= monthAgo;
+                            break;
+                    }
+                }
+                
+                return matchesSearch && matchesDate;
+            });
+            
+            displayHistory();
+        }
+
+        function sortHistory() {
+            const sortBy = document.getElementById('sortFilter').value;
+            
+            switch(sortBy) {
+                case 'date-desc':
+                    filteredHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    break;
+                case 'date-asc':
+                    filteredHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+                    break;
+                case 'score-desc':
+                    filteredHistory.sort((a, b) => b.maxScore - a.maxScore);
+                    break;
+                case 'score-asc':
+                    filteredHistory.sort((a, b) => a.maxScore - b.maxScore);
+                    break;
+            }
+            
+            displayHistory();
+        }
+
+        function viewGameDetails(index) {
+            const game = gameHistory[index];
+            const modal = document.getElementById('gameDetailsModal');
+            const body = document.getElementById('gameDetailsBody');
+            
+            let roundsHtml = '';
+            if (game.rounds && game.rounds.length > 0) {
+                roundsHtml = `
+                    <h3>Round-by-Round Scores</h3>
+                    <table style="width: 100%; margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left;">Round</th>
+                                ${game.playerNames.map(name => `<th>${name}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${game.rounds.map((round, idx) => `
+                                <tr>
+                                    <td><strong>Round ${idx + 1}</strong></td>
+                                    ${round.map(score => `<td>${score}</td>`).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr style="font-weight: bold;">
+                                <td>Total</td>
+                                ${game.scores.map(score => `<td>${score}</td>`).join('')}
+                            </tr>
+                        </tfoot>
+                    </table>
+                `;
+            }
+            
+            body.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <strong>Date:</strong> ${game.date}
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <strong>Winner:</strong> 
+                    <span class="winner-badge">
+                        <i class="fas fa-crown"></i> ${game.highestScorer}
+                    </span>
+                    with ${game.maxScore} points
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <strong>Final Scores:</strong>
+                    ${game.playerNames.map((name, idx) => 
+                        `<div style="padding: 5px 0;">${name}: <strong>${game.scores[idx]}</strong></div>`
+                    ).join('')}
+                </div>
+                ${roundsHtml}
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeGameDetailsModal() {
+            document.getElementById('gameDetailsModal').style.display = 'none';
+        }
+
+        function showResetModal() {
+            document.getElementById('resetModal').style.display = 'flex';
+        }
+
+        function closeResetModal() {
+            document.getElementById('resetModal').style.display = 'none';
+        }
+
+        function confirmReset() {
+            showLoading();
+            localStorage.removeItem("gameHistory");
+            gameHistory = [];
+            filteredHistory = [];
+            
+            closeResetModal();
+            loadHistory();
+            
+            showNotification("All game history has been reset", "success");
+        }
+
+        function goBack() {
+            window.location.href = "index.html";
+        }
+
+        function toggleExportMenu() {
+            const dropdown = document.getElementById('exportDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        function exportToPDF() {
+            showNotification("PDF export feature coming soon!", "info");
+            toggleExportMenu();
+        }
+
+        function exportToExcel() {
+            showNotification("Excel export feature coming soon!", "info");
+            toggleExportMenu();
+        }
+
+        function exportToCSV() {
+            if (gameHistory.length === 0) {
+                showNotification("No data to export", "warning");
+                return;
+            }
+
+            let csv = 'Date,Player 1,Score 1,Player 2,Score 2,Player 3,Score 3,Player 4,Score 4,Winner,Winning Score\n';
+            
+            gameHistory.forEach(game => {
+                csv += `"${game.date}",`;
+                game.playerNames.forEach((player, idx) => {
+                    csv += `"${player}",${game.scores[idx]},`;
+                });
+                csv += `"${game.highestScorer}",${game.maxScore}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `game_history_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            
+            showNotification("CSV exported successfully!", "success");
+            toggleExportMenu();
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement("div");
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 10px;
+                color: white;
+                font-weight: 500;
+                z-index: 1001;
+                animation: slideIn 0.3s ease;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            `;
+
+            switch(type) {
+                case 'success':
+                    notification.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                    break;
+                case 'error':
+                    notification.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                    break;
+                case 'warning':
+                    notification.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+                    break;
+                case 'info':
+                    notification.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+                    break;
+            }
+
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Close dropdown when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.matches('.btn-secondary')) {
+                const dropdown = document.getElementById('exportDropdown');
+                if (dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        }
+
+        // Load history on page load
+        window.onload = loadHistory;
+    </script>
+</body>
+</html>

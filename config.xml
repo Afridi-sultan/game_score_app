@@ -1,0 +1,22 @@
+<?xml version = '1.0' encoding = 'UTF-8' ?>
+<widget
+    android-versionCode = '1'
+    id = 'com.iBuildThings.MP3Player'
+    version = '2.1.0'
+    xmlns = 'https://www.w3.org/ns/widgets'>
+
+    <name>Hazari</name>
+    <description>Playing card</description>
+    <author>afridi</author>
+
+    <preference name = 'orientation' value = 'portrait'/>
+<platform name="android">
+    <icon src="www/icon.png" density="xxxhdpi" />
+    <icon src="www/icon.png" density="xxhdpi" />
+    <icon src="www/icon.png" density="xhdpi" />
+    <icon src="www/icon.png" density="hdpi" />
+    <icon src="www/icon.png" density="mdpi" />
+</platform>
+
+
+</widget>

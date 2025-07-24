@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Card Game Score Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-bg: #1f2937;
+            --light-bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,32L48,37.3C96,43,192,53,288,90.7C384,128,480,192,576,213.3C672,235,768,213,864,176C960,139,1056,85,1152,80C1248,75,1344,117,1392,138.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+            background-size: cover;
+            pointer-events: none;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            position: relative;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .action-buttons {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            box-shadow: var(--shadow-md);
+        }
+
+        .icon-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .history-btn {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .player-setup {
+            background: var(--light-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .player-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .player-input-group {
+            position: relative;
+        }
+
+        .player-input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .player-input-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .player-input-group label {
+            position: absolute;
+            top: -8px;
+            left: 12px;
+            background: white;
+            padding: 0 5px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .score-info {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .score-info h3 {
+            font-size: 1.1rem;
+            color: #92400e;
+            margin-bottom: 5px;
+        }
+
+        .score-info .score-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #dc2626;
+        }
+
+        .score-table-container {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 25px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 12px;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .round-score {
+            width: 70px;
+            padding: 8px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            background: white;
+            -moz-appearance: textfield; /* Firefox */
+        }
+
+        /* Remove number input spinners */
+        .round-score::-webkit-outer-spin-button,
+        .round-score::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .round-score:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .totals-row {
+            background: linear-gradient(135deg, #ddd6fe, #c7d2fe);
+            font-weight: 700;
+        }
+
+        .winner-announcement {
+            background: linear-gradient(135deg, #86efac, #4ade80);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
+        .winner-announcement h2 {
+            font-size: 1.5rem;
+            color: #14532d;
+            margin-bottom: 10px;
+        }
+
+        .winner-announcement p {
+            font-size: 1.2rem;
+            color: #166534;
+        }
+
+        .quick-score-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .quick-score {
+            padding: 8px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .quick-score:hover {
+            border-color: var(--primary-color);
+            background: var(--light-bg);
+        }
+
+        @media (max-width: 640px) {
+            .main-container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .player-inputs {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .control-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .round-score {
+                width: 55px;
+                padding: 6px 4px;
+                font-size: 0.9rem;
+            }
+            
+            th, td {
+                padding: 10px 6px;
+                font-size: 0.85rem;
+            }
+            
+            .score-table-container {
+                margin-left: -10px;
+                margin-right: -10px;
+                border-radius: 0;
+            }
+
+            .action-buttons {
+                position: static;
+                margin-top: 20px;
+                justify-content: center;
+            }
+        }
+
+
+        @media (max-width: 380px) {
+            .main-container {
+                padding: 10px;
+            }
+            
+            .round-score {
+                width: 45px;
+                padding: 5px 2px;
+                font-size: 0.85rem;
+            }
+            
+            th, td {
+                padding: 8px 4px;
+                font-size: 0.8rem;
+            }
+            
+            td:first-child, th:first-child {
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+            
+            .content-section {
+                padding: 15px;
+            }
+            
+            .score-table-container {
+                margin-left: -5px;
+                margin-right: -5px;
+            }
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="main-container">
+        <div class="header">
+            <h1>Professional Score Tracker</h1>
+            <p>Advanced Card Game Scoring System</p>
+            <div class="action-buttons">
+                <button onclick="goToHistoryPage()" class="icon-btn history-btn tooltip">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="tooltiptext">View History</span>
+                </button>
+                <button onclick="saveGame()" class="icon-btn save-btn tooltip">
+                    <i class="fas fa-save"></i>
+                    <span class="tooltiptext">Save Game</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="player-setup">
+            <div class="player-inputs">
+                <div class="player-input-group">
+                    <label for="player1">Player 1</label>
+                    <input type="text" id="player1" placeholder="Enter name">
+                </div>
+                <div class="player-input-group">
+                    <label for="player2">Player 2</label>
+                    <input type="text" id="player2" placeholder="Enter name">
+                </div>
+                <div class="player-input-group">
+                    <label for="player3">Player 3</label>
+                    <input type="text" id="player3" placeholder="Enter name">
+                </div>
+                <div class="player-input-group">
+                    <label for="player4">Player 4</label>
+                    <input type="text" id="player4" placeholder="Enter name">
+                </div>
+            </div>
+            
+            <div class="control-buttons">
+                <button class="btn btn-primary" onclick="setPlayerNames()">
+                    <i class="fas fa-user-check"></i> Set Players
+                </button>
+                <button class="btn btn-success" onclick="addRound()">
+                    <i class="fas fa-plus-circle"></i> Add Round
+                </button>
+                <button class="btn btn-danger" onclick="resetScores()">
+                    <i class="fas fa-redo"></i> Reset Game
+                </button>
+            </div>
+        </div>
+
+        <div class="score-info">
+            <h3>Remaining Score for Current Round</h3>
+            <div class="score-value" id="remainingScore">360</div>
+        </div>
+
+        <div class="quick-score-buttons">
+            <button class="quick-score" onclick="quickScore(360)">360</button>
+            <button class="quick-score" onclick="quickScore(100)">100</button>
+            <button class="quick-score" onclick="quickScore(200)">200</button>
+            <button class="quick-score" onclick="quickScore(160)">160</button>
+            <button class="quick-score" onclick="quickScore(260)">260</button>
+        </div>
+
+        <div class="score-table-container">
+            <table id="scoreTable">
+                <thead>
+                    <tr>
+                        <th>Round</th>
+                        <th id="player1Header">Player 1</th>
+                        <th id="player2Header">Player 2</th>
+                        <th id="player3Header">Player 3</th>
+                        <th id="player4Header">Player 4</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+                <tfoot>
+                    <tr class="totals-row">
+                        <td>TOTAL</td>
+                        <td id="player1Total">0</td>
+                        <td id="player2Total">0</td>
+                        <td id="player3Total">0</td>
+                        <td id="player4Total">0</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div id="congratsMessage"></div>
+    </div>
+
+    <script>
+        let roundCount = 1;
+        let lastFocusedInput = null;
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }, 300);
+        }
+
+        function setPlayerNames() {
+            const player1 = document.getElementById("player1").value.trim() || "Player 1";
+            const player2 = document.getElementById("player2").value.trim() || "Player 2";
+            const player3 = document.getElementById("player3").value.trim() || "Player 3";
+            const player4 = document.getElementById("player4").value.trim() || "Player 4";
+
+            document.getElementById("player1Header").textContent = player1;
+            document.getElementById("player2Header").textContent = player2;
+            document.getElementById("player3Header").textContent = player3;
+            document.getElementById("player4Header").textContent = player4;
+
+            // Save state
+            saveGameState();
+            
+            // Visual feedback
+            showNotification("Player names updated!", "success");
+        }
+
+        function addRound() {
+            const table = document.getElementById("scoreTable").getElementsByTagName("tbody")[0];
+            const row = document.createElement("tr");
+            row.style.opacity = "0";
+            row.innerHTML = `
+                <td><strong>Round ${roundCount}</strong></td>
+                <td><input type="number" min="0" max="360" value="0" oninput="validateScore(this)" onfocus="setLastFocused(this)" class="round-score"></td>
+                <td><input type="number" min="0" max="360" value="0" oninput="validateScore(this)" onfocus="setLastFocused(this)" class="round-score"></td>
+                <td><input type="number" min="0" max="360" value="0" oninput="validateScore(this)" onfocus="setLastFocused(this)" class="round-score"></td>
+                <td><input type="number" min="0" max="360" value="0" oninput="validateScore(this)" onfocus="setLastFocused(this)" class="round-score"></td>
+            `;
+            table.appendChild(row);
+            
+            // Animate row appearance
+            setTimeout(() => {
+                row.style.transition = "opacity 0.3s ease";
+                row.style.opacity = "1";
+            }, 10);
+            
+            roundCount++;
+            updateRemainingScore();
+            saveGameState();
+        }
+
+        function setLastFocused(input) {
+            lastFocusedInput = input;
+        }
+
+        function quickScore(score) {
+            if (lastFocusedInput) {
+                lastFocusedInput.value = score;
+                validateScore(lastFocusedInput);
+            } else {
+                showNotification("Please select a score field first", "warning");
+            }
+        }
+
+        function validateScore(input) {
+            const value = parseInt(input.value) || 0;
+            
+            if (value < 0) {
+                input.value = 0;
+            } else if (value > 360) {
+                input.value = 360;
+            }
+
+            const roundInputs = Array.from(input.closest("tr").querySelectorAll(".round-score"));
+            const currentScores = roundInputs.map(inp => parseInt(inp.value) || 0);
+            const currentTotal = currentScores.reduce((a, b) => a + b, 0);
+
+            if (currentTotal > 360) {
+                input.value = parseInt(input.value) - (currentTotal - 360);
+                showNotification("Round total cannot exceed 360", "error");
+            }
+
+            updateRemainingScore();
+            updateTotals();
+            saveGameState();
+        }
+
+        function updateRemainingScore() {
+            const rows = document.querySelectorAll("#scoreTable tbody tr");
+            if (rows.length === 0) {
+                document.getElementById("remainingScore").textContent = 360;
+                return;
+            }
+
+            const lastRow = rows[rows.length - 1];
+            const lastRoundInputs = Array.from(lastRow.querySelectorAll(".round-score"));
+            const currentScores = lastRoundInputs.map(input => parseInt(input.value) || 0);
+            const currentTotal = currentScores.reduce((a, b) => a + b, 0);
+            
+            const remaining = 360 - currentTotal;
+            const remainingElement = document.getElementById("remainingScore");
+            remainingElement.textContent = remaining;
+            
+            // Change color based on remaining score
+            if (remaining === 0) {
+                remainingElement.style.color = "#10b981";
+            } else if (remaining < 50) {
+                remainingElement.style.color = "#f59e0b";
+            } else {
+                remainingElement.style.color = "#dc2626";
+            }
+        }
+
+        function updateTotals() {
+            const totals = [0, 0, 0, 0];
+            const rows = document.querySelectorAll("#scoreTable tbody tr");
+
+            rows.forEach(row => {
+                Array.from(row.querySelectorAll("input")).forEach((input, index) => {
+                    totals[index] += parseInt(input.value) || 0;
+                });
+            });
+
+            document.getElementById("player1Total").textContent = totals[0];
+            document.getElementById("player2Total").textContent = totals[1];
+            document.getElementById("player3Total").textContent = totals[2];
+            document.getElementById("player4Total").textContent = totals[3];
+
+            displayWinner(totals);
+        }
+
+        function displayWinner(totals) {
+            const congratsMessage = document.getElementById("congratsMessage");
+            congratsMessage.innerHTML = "";
+            
+            if (Math.max(...totals) === 0) return;
+
+            const playerNames = [
+                document.getElementById("player1Header").textContent,
+                document.getElementById("player2Header").textContent,
+                document.getElementById("player3Header").textContent,
+                document.getElementById("player4Header").textContent,
+            ];
+            
+            const maxScore = Math.max(...totals);
+            const winners = playerNames.filter((_, idx) => totals[idx] === maxScore);
+
+            if (winners.length > 0) {
+                const winnerDiv = document.createElement("div");
+                winnerDiv.className = "winner-announcement";
+                winnerDiv.innerHTML = `
+                    <h2><i class="fas fa-trophy"></i> ${winners.length > 1 ? 'Winners!' : 'Winner!'}</h2>
+                    <p>${winners.join(" & ")} - Score: ${maxScore}</p>
+                `;
+                congratsMessage.appendChild(winnerDiv);
+            }
+        }
+
+        function resetScores() {
+            if (confirm("Are you sure you want to reset the game? All current scores will be lost.")) {
+                showLoading();
+                document.querySelectorAll("#scoreTable tbody").forEach(tbody => tbody.innerHTML = "");
+                roundCount = 1;
+                document.getElementById("player1Total").textContent = "0";
+                document.getElementById("player2Total").textContent = "0";
+                document.getElementById("player3Total").textContent = "0";
+                document.getElementById("player4Total").textContent = "0";
+                document.getElementById("remainingScore").textContent = "360";
+                document.getElementById("congratsMessage").innerHTML = "";
+                lastFocusedInput = null;
+                
+                // Clear saved state
+                localStorage.removeItem("gameState");
+                
+                hideLoading();
+                showNotification("Game reset successfully", "success");
+            }
+        }
+
+        function saveGame() {
+            showLoading();
+            
+            const playerNames = [
+                document.getElementById("player1").value.trim(),
+                document.getElementById("player2").value.trim(),
+                document.getElementById("player3").value.trim(),
+                document.getElementById("player4").value.trim()
+            ];
+
+            const playerTotals = [
+                parseInt(document.getElementById("player1Total").textContent) || 0,
+                parseInt(document.getElementById("player2Total").textContent) || 0,
+                parseInt(document.getElementById("player3Total").textContent) || 0,
+                parseInt(document.getElementById("player4Total").textContent) || 0
+            ];
+
+            const scoreTableBody = document.getElementById("scoreTable").getElementsByTagName("tbody")[0];
+
+            // Validation
+            if (playerNames.some(name => name === "")) {
+                hideLoading();
+                showNotification("Please enter names for all 4 players before saving.", "error");
+                return;
+            }
+
+            if (scoreTableBody.children.length < 3) {
+                hideLoading();
+                showNotification("You must add at least 3 rounds before saving.", "error");
+                return;
+            }
+
+            // Check if each round has at least one score
+            const rounds = [];
+            let validRounds = true;
+            Array.from(scoreTableBody.children).forEach(row => {
+                const scores = Array.from(row.querySelectorAll(".round-score")).map(input => parseInt(input.value) || 0);
+                const hasScore = scores.some(score => score > 0);
+                if (!hasScore) {
+                    validRounds = false;
+                }
+                rounds.push(scores);
+            });
+
+            if (!validRounds) {
+                hideLoading();
+                showNotification("Each round must have at least one player's score entered.", "error");
+                return;
+            }
+
+            // Create game object
+            const currentGame = {
+                date: new Date().toLocaleString('en-IN', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short'
+                }),
+                playerNames,
+                scores: playerTotals,
+                highestScorer: playerNames[playerTotals.indexOf(Math.max(...playerTotals))],
+                maxScore: Math.max(...playerTotals),
+                rounds: rounds
+            };
+
+            // Check for duplicates
+            const history = JSON.parse(localStorage.getItem("gameHistory")) || [];
+            const isDuplicate = history.some(game =>
+                JSON.stringify(game.playerNames) === JSON.stringify(currentGame.playerNames) &&
+                JSON.stringify(game.scores) === JSON.stringify(currentGame.scores)
+            );
+
+            if (isDuplicate) {
+                hideLoading();
+                showNotification("This game has already been saved.", "error");
+                return;
+            }
+
+            // Save game
+            history.push(currentGame);
+            localStorage.setItem("gameHistory", JSON.stringify(history));
+            
+            hideLoading();
+            showNotification("Game saved successfully!", "success");
+            
+            // Clear game state after successful save
+            localStorage.removeItem("gameState");
+        }
+
+        function saveGameState() {
+            const playerNames = [
+                document.getElementById("player1").value.trim(),
+                document.getElementById("player2").value.trim(),
+                document.getElementById("player3").value.trim(),
+                document.getElementById("player4").value.trim()
+            ];
+
+            const rounds = [];
+            const scoreTableBody = document.getElementById("scoreTable").getElementsByTagName("tbody")[0];
+
+            Array.from(scoreTableBody.children).forEach(row => {
+                const scores = Array.from(row.querySelectorAll(".round-score")).map(input => parseInt(input.value) || 0);
+                rounds.push(scores);
+            });
+
+            const gameState = { playerNames, rounds, roundCount };
+            localStorage.setItem("gameState", JSON.stringify(gameState));
+        }
+
+        function loadGameState() {
+            const savedGameState = JSON.parse(localStorage.getItem("gameState"));
+
+            if (savedGameState) {
+                // Restore player names
+                document.getElementById("player1").value = savedGameState.playerNames[0] || "";
+                document.getElementById("player2").value = savedGameState.playerNames[1] || "";
+                document.getElementById("player3").value = savedGameState.playerNames[2] || "";
+                document.getElementById("player4").value = savedGameState.playerNames[3] || "";
+                
+                // Set player headers
+                setPlayerNames();
+
+                // Restore round count
+                roundCount = savedGameState.roundCount || 1;
+
+                // Restore rounds
+                savedGameState.rounds.forEach(scores => {
+                    const table = document.getElementById("scoreTable").getElementsByTagName("tbody")[0];
+                    const row = document.createElement("tr");
+                    const currentRound = table.children.length + 1;
+                    row.innerHTML = `
+                        <td><strong>Round ${currentRound}</strong></td>
+                        <td><input type="number" min="0" max="360" value="${scores[0]}" oninput="validateScore(this)" onfocus="setLastFocused(this)" class="round-score"></td>
+                        <td><input type="number" min="0" max="360" value="${scores[1]}" oninput="validateScore(this)" onfocus="setLastFocused(this)" class="round-score"></td>
+                        <td><input type="number" min="0" max="360" value="${scores[2]}" oninput="validateScore(this)" onfocus="setLastFocused(this)" class="round-score"></td>
+                        <td><input type="number" min="0" max="360" value="${scores[3]}" oninput="validateScore(this)" onfocus="setLastFocused(this)" class="round-score"></td>
+                    `;
+                    table.appendChild(row);
+                });
+
+                updateRemainingScore();
+                updateTotals();
+            }
+        }
+
+        function goToHistoryPage() {
+            saveGameState();
+            window.location.href = "history.html";
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement("div");
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 10px;
+                color: white;
+                font-weight: 500;
+                z-index: 1001;
+                animation: slideIn 0.3s ease;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            `;
+
+            switch(type) {
+                case 'success':
+                    notification.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                    break;
+                case 'error':
+                    notification.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                    break;
+                case 'warning':
+                    notification.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+                    break;
+            }
+
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Load game state on page load
+        window.onload = loadGameState;
+    </script>
+</body>
+</html>
